@@ -7,94 +7,94 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ErrorResponse {
+pub struct Exception {
     pub exception: String,
     pub doc: String,
     pub display: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ApiVersion {
+pub struct Version {
     pub api_version: u8,
     pub software_version: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Company {
-    count: Option<usize>,
-    canonical_name: Option<String>,
-    average_salary: Option<usize>,
-    display_name: Option<String>,
+    pub count: Option<usize>,
+    pub canonical_name: Option<String>,
+    pub average_salary: Option<usize>,
+    pub display_name: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct TopCompaniesResponse {
+pub struct TopCompanies {
     pub leaderboard: Option<Vec<Company>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Category {
-    tag: String,
-    label: String,
+    pub tag: String,
+    pub label: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CategoriesResponse {
-    results: Vec<Category>,
+pub struct Categories {
+    pub results: Vec<Category>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct HistoryResponse {
-    month: Option<HashMap<String, f64>>,
+pub struct HistoricalSalary {
+    pub month: Option<HashMap<String, f64>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct HistogramResponse {
-    histogram: Option<HashMap<String, String>>,
+pub struct SalaryHistogram {
+    pub histogram: Option<HashMap<String, String>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LocationDetail {
-    area: Option<Vec<String>>,
-    display_name: Option<String>,
+    pub area: Option<Vec<String>>,
+    pub display_name: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Location {
-    count: Option<usize>,
-    location: Option<LocationDetail>,
+    pub count: Option<usize>,
+    pub location: Option<LocationDetail>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct GeodataResponse {
-    locations: Option<Vec<Location>>,
+pub struct JobGeoData {
+    pub locations: Option<Vec<Location>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Job {
-    id: String,
-    adref: String,
-    created: String,
-    title: String,
-    description: String,
-    redirect_url: String,
-    latitude: f64,
-    longitude: f64,
-    category: Category,
-    location: LocationDetail,
-    salary_min: f64,
-    salary_max: f64,
-    salary_is_predicted: String,
-    company: Company,
-    contract_type: Option<String>,
-    contract_time: Option<String>,
+    pub id: String,
+    pub adref: String,
+    pub created: String,
+    pub title: String,
+    pub description: String,
+    pub redirect_url: String,
+    pub latitude: f64,
+    pub longitude: f64,
+    pub category: Category,
+    pub location: LocationDetail,
+    pub salary_min: f64,
+    pub salary_max: f64,
+    pub salary_is_predicted: String,
+    pub company: Company,
+    pub contract_type: Option<String>,
+    pub contract_time: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct SearchResponse {
-    results: Vec<Job>,
-    count: usize,
-    mean: f64,
+pub struct JobSearchResults {
+    pub results: Vec<Job>,
+    pub count: usize,
+    pub mean: f64,
 }
 
 pub enum SortDirection {
@@ -147,6 +147,16 @@ impl Display for SortBy {
 
 #[derive(Default, Serialize)]
 pub struct Parameters {
+    pub location0: Option<String>,
+    pub location1: Option<String>,
+    pub location2: Option<String>,
+    pub location3: Option<String>,
+    pub location4: Option<String>,
+    pub location5: Option<String>,
+    pub location6: Option<String>,
+    pub location7: Option<String>,
+    pub category: Option<String>,
+
     pub what: Option<String>,
     pub months: Option<usize>,
 
@@ -170,17 +180,6 @@ pub struct Parameters {
     pub salary_max: Option<usize>,
     pub sort_dir: Option<String>,
     pub sort_by: Option<String>,
-
-    pub location0: Option<String>,
-    pub location1: Option<String>,
-    pub location2: Option<String>,
-    pub location3: Option<String>,
-    pub location4: Option<String>,
-    pub location5: Option<String>,
-    pub location6: Option<String>,
-    pub location7: Option<String>,
-
-    pub category: Option<String>,
 }
 
 pub enum Country {
@@ -230,11 +229,5 @@ impl Country {
             Country::Singapore => "sg",
             Country::SouthAfrica => "za",
         }
-    }
-}
-
-impl Display for Country {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.to_code())
     }
 }
