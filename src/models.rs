@@ -8,92 +8,161 @@ use serde::{Deserialize, Serialize};
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Exception {
+    /// A string representing the class of exception.
     pub exception: String,
+    /// A human readable error message in English.
     pub doc: String,
+    /// A URL linking to hopefully the relevant documentation.
     pub display: String,
 }
 
+/// The object is returned by the version endpoint
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Version {
+    /// The major version of the API
     pub api_version: u8,
+    /// The version of the software providing the API
     pub software_version: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Company {
-    pub count: Option<usize>,
-    pub canonical_name: Option<String>,
-    pub average_salary: Option<usize>,
+    /// The name of the company, in the form provided by the advertiser.
+    /// A company name is not always available.
     pub display_name: Option<String>,
+    /// A normalised string of the company name. This is not always available.
+    /// When available, it can be supplied to the search endpoint in the company query string parameter.
+    pub canonical_name: Option<String>,
+    /// The total number of job advertisements posted by this company.
+    /// This will normally only be provided by statistics queries, not search queries.
+    pub count: Option<usize>,
+    /// The average salary in job advertisements posted by this company.
+    /// This will normally only be provided by statistics queries, not search queries.
+    /// The data may be provided with up to two decimal places, and will have no currency symbol.
+    pub average_salary: Option<usize>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TopCompanies {
+    /// A list of Company objects, ordered by the number of advertisements they have in our database.
     pub leaderboard: Option<Vec<Company>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Category {
+    /// The string which should be passed to search endpoint using the category query parameter.
     pub tag: String,
+    /// A text string describing the category, suitable for display.
     pub label: String,
 }
 
+/// The object is returned by the categories endpoint
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Categories {
+    /// An array of all the categories discovered as Category objects.
     pub results: Vec<Category>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HistoricalSalary {
+    /// A hash of salary figures. The key is an ISO 8601 date, omitting the day.
+    /// For example, 2013-09 indicates September 2013.
+    /// The salary is averaged and supplied with up to two decimal places but no currency symbol, for example 20000.00, 20000.0 or 20000.
     pub month: Option<HashMap<String, f64>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SalaryHistogram {
+    /// Returns the current distribution of jobs by salary.
+    /// Results are returned as an associative array of salaries and vacancies.
+    ///  - Each salary number indicates the lower end of a range.
+    ///  - Each vacancy number is the number of live job ads with a salary in range.
+    /// It can be used to generate a "histogram distribution" of salaries.
+    /// This is a hashmap containing the histogram data. The buckets are the hash keys, indicating the lowest salary counted in that particular bucket.
     pub histogram: Option<HashMap<String, String>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LocationDetail {
+    /// A description of the location, as an array of strings, each refining the location more than the previous.
+    ///     - Country
+    ///     - Region
+    ///     - Sub-region or city
+    ///     - City, town or suburb
+    /// Locations may have up to five levels of detail. For example,
+    ///     - UK
+    ///     - South East England
+    ///     - Surrey
+    ///     - Reigate
+    ///     - Leigh
+    /// This data may be serialised into a series of locationN query string parameters and be supplied to the search and statistical endpoints.
     pub area: Option<Vec<String>>,
+    /// A human readable name for the location, intended for display in applications.
     pub display_name: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Location {
+pub struct LocationJobs {
+    /// The number of jobs available at this location.
     pub count: Option<usize>,
+    /// More detail about the location
     pub location: Option<LocationDetail>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct JobGeoData {
-    pub locations: Option<Vec<Location>>,
+    /// List of Location objects
+    pub locations: Option<Vec<LocationJobs>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Job {
+    /// A string uniquely identifying this advertisement.
     pub id: String,
-    pub adref: String,
+    /// The date the ad was created as defined by the original source of the ad.
+    /// Where we find an ad without a created date, we use the time we first saw the ad.
+    /// It is formatted as an ISO 8601 date time string.
     pub created: String,
+    /// A summary of the advertisement.
     pub title: String,
+    /// The details of the advertisement, truncated to 500 characters.
     pub description: String,
+    /// A URL which will redirect to the advertisement as displayed on the advertiser's site.
+    /// Using this URL send a user to the advertiser's site is necessary to be compliant with Adzuna's terms and conditions.
     pub redirect_url: String,
+    /// The latitude of the workplace, in degrees.
     pub latitude: f64,
+    /// The longitude of the workplace, in degrees.
     pub longitude: f64,
+    /// The category of the advertisement.
     pub category: Category,
+    /// The locality of the advertisement.
     pub location: LocationDetail,
+    /// The bottom end of the pay scale for this job, given in the local currency.
     pub salary_min: f64,
+    /// The top end of the pay scale for this job, given in the local currency.
     pub salary_max: f64,
+    /// A flag indicating if the salary of the job was predicted by Adzuna's 'Jobsworth' technology.
+    /// Jobsworth predicts salaries for jobs with no advertised salary.
+    /// Predictions are based on continual analysis of millions of ads. Most of the time predictions are accurate within 10%.
     pub salary_is_predicted: String,
+    /// The company offering the job.
     pub company: Company,
+    /// Either permanent or contract to indicate whether the job is permanent or just a short-term contract.
     pub contract_type: Option<String>,
+    /// Either full_time or part_time to indicate the hours of the job.
     pub contract_time: Option<String>,
+    /// TBD
+    pub adref: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct JobSearchResults {
+    /// An array of the search results as Job objects.
     pub results: Vec<Job>,
+    /// Number of jobs that were matched
     pub count: usize,
+    /// The mean salary across all the results
     pub mean: f64,
 }
 
