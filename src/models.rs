@@ -1,9 +1,8 @@
+use serde::{ser::SerializeMap, Deserialize, Serialize, Serializer};
 use std::{
     collections::HashMap,
     fmt::{Display, Formatter},
 };
-
-use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -148,9 +147,9 @@ pub struct Job {
     pub salary_is_predicted: String,
     /// The company offering the job.
     pub company: Company,
-    /// Either permanent or contract to indicate whether the job is permanent or just a short-term contract.
+    /// Either `permanent` or `contract` to indicate whether the job is permanent or just a short-term contract.
     pub contract_type: Option<String>,
-    /// Either full_time or part_time to indicate the hours of the job.
+    /// Either `full_time` or `part_time` to indicate the hours of the job.
     pub contract_time: Option<String>,
     /// TBD
     pub adref: String,
@@ -214,22 +213,26 @@ impl Display for SortBy {
     }
 }
 
+fn location_serialize<S>(locations: &[String], s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let mut ser = s.serialize_map(Some(8))?;
+    for (i, location) in locations.iter().enumerate() {
+        ser.serialize_entry(&format!("location{i}"), location)?;
+    }
+    ser.end()
+}
+
 #[derive(Default, Serialize)]
 pub struct Parameters {
-    pub location0: Option<String>,
-    pub location1: Option<String>,
-    pub location2: Option<String>,
-    pub location3: Option<String>,
-    pub location4: Option<String>,
-    pub location5: Option<String>,
-    pub location6: Option<String>,
-    pub location7: Option<String>,
+    #[serde(serialize_with = "location_serialize")]
+    pub locations: Vec<String>,
     pub category: Option<String>,
 
     pub what: Option<String>,
     pub months: Option<usize>,
 
-    // /search only
     pub what_and: Option<String>,
     pub what_phrase: Option<String>,
     pub what_or: Option<String>,

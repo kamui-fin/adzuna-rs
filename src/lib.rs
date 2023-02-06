@@ -1,8 +1,9 @@
-pub mod client;
 pub mod models;
+pub mod client;
+pub mod request;
 
 // TODO:
 // - verify and test all models
-//    - fig solution to incomplete docs
-// - add docs for each model, route, and parameter
 // - apply post processing to results
+// - health method
+// - ping method
