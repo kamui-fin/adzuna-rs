@@ -12,7 +12,7 @@ impl Client {
         Self { app_id, app_key }
     }
 
-    /// Returns the current version of this API
+    /// Return the current version of this API
     pub fn api_version(&self) -> VersionRequest {
         VersionRequest::new(self)
     }

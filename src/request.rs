@@ -31,10 +31,14 @@ impl AdzunaError {
 pub trait RequestBuilder {
     type Response: DeserializeOwned + std::fmt::Debug;
 
+    #[doc(hidden)]
     fn get_request_url(&self) -> String;
+    #[doc(hidden)]
     fn get_client(&self) -> &Client;
+    #[doc(hidden)]
     fn get_parameters(&self) -> &Parameters;
 
+    /// Builds and executes request.
     async fn fetch(&self) -> Result<Self::Response, AdzunaError> {
         let url = format!("{}{}", ROOT_URL, self.get_request_url());
         let auth_params: Vec<(String, String)> = vec![
@@ -77,7 +81,7 @@ macro_rules! create_endpoint {
             search_page: usize,
         }
         impl<'a> $name<'a> {
-            pub fn new(client: &'a Client) -> Self {
+            pub(crate) fn new(client: &'a Client) -> Self {
                 Self {
                     client,
                     parameters: Default::default(),

@@ -1,9 +1,9 @@
 [package]
 name = "adzuna"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Kamui <fin-kamui@pm.me>"]
 edition = "2021"
-description = "An easy to use, asynchronous, and complete API wrapper for interacting with the Adzuna API."
+description = "An easy to use, asynchronous, and complete API wrapper for interacting with the Adzuna API"
 homepage = "https://github.com/kamui-fin/adzuna-rs"
 repository = "https://github.com/kamui-fin/adzuna-rs"
 license = "GPL-3.0-only"
