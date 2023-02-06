@@ -65,10 +65,10 @@ pub trait RequestBuilder {
             ));
         }
 
-        response
-            .json::<Self::Response>()
-            .await
-            .map_err(|_| AdzunaError::from_status(StatusCode::BAD_REQUEST))
+        response.json::<Self::Response>().await.map_err(|e| {
+            println!("{e:#?}");
+            AdzunaError::from_status(StatusCode::BAD_REQUEST)
+        })
     }
 }
 

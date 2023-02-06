@@ -78,7 +78,7 @@ pub struct SalaryHistogram {
     ///  - Each vacancy number is the number of live job ads with a salary in range.
     /// It can be used to generate a "histogram distribution" of salaries.
     /// This is a hashmap containing the histogram data. The buckets are the hash keys, indicating the lowest salary counted in that particular bucket.
-    pub histogram: Option<HashMap<String, String>>,
+    pub histogram: Option<HashMap<String, usize>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

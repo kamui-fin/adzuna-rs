@@ -14,14 +14,14 @@ Via `cargo`, add this to your project's `Cargo.toml`:
 
 ```toml
 [dependencies]
-adzuna-rs = "1.0.1"
+adzuna-rs = "1.0.2"
 ```
 
 ## Usage
 
 First, obtain an `api_id` and `api_key` by [registering](https://developer.adzuna.com/signup) for the API. Then, you can instantiate a `Client`:
 
-```rs
+```rust
 use adzuna::{Client, RequestBuilder};
 
 let client = Client::new("API_ID".into(), "API_KEY".into());
@@ -35,7 +35,7 @@ Calling an endpoint will return a request builder, which allows you to chain cal
 After customizing the query, you have to call `.fetch()`, which asynchronously sends the request and returns the data in a `Result<T, AdzunaError>`.
 `AdzunaError` optionally contains more information about the error returned by the API as such:
 
-```rs
+```rust
 AdzunaError {
     api_error: Some(
         ApiException {
@@ -52,7 +52,7 @@ AdzunaError {
 
 Getting the top companies for SWE in Texas:
 
-```rs
+```rust
 let companies = client
     .top_companies()
     .what("software engineering")
@@ -64,7 +64,7 @@ let companies = client
 
 Search for UI Design jobs 5km away from Boston:
 
-```rs
+```rust
 let jobs = client
     .search()
     .what("ui design")
@@ -76,7 +76,7 @@ let jobs = client
 
 Search for part time sales jobs sorted by salary in descending order:
 
-```rs
+```rust
 use adzuna::models::{SortBy, SortDirection};
 
 let jobs = client
@@ -90,7 +90,7 @@ let jobs = client
 
 Generate a histogram of salary data for data analyst jobs:
 
-```rs
+```rust
 let jobs = client
     .histogram()
     .what("data analyst")
@@ -104,7 +104,6 @@ Tests need to be ran sequentially to avoid getting rate limited. You also need t
 
 ```
 API_ID=123 API_KEY=abc cargo test -- --test-threads 1
-
 ```
 
 ## Contributing

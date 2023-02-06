@@ -2,8 +2,7 @@
 mod tests {
     use std::env;
 
-    use adzuna_rs::client::Client;
-    use adzuna_rs::request::RequestBuilder;
+    use adzuna::{Client, RequestBuilder};
 
     fn get_client() -> Client {
         Client::new(env::var("API_ID").unwrap(), env::var("API_KEY").unwrap())
@@ -27,6 +26,12 @@ mod tests {
     async fn it_fetches_histogram() {
         let client = get_client();
         let histogram = client.histogram().what("photoshop").fetch().await.unwrap();
+        assert!(histogram.histogram.is_some());
+        let histogram = histogram.histogram.unwrap();
+        assert!(!histogram.is_empty());
+
+        // make sure results are consistent for different keywords
+        let histogram = client.histogram().what("excel").fetch().await.unwrap();
         assert!(histogram.histogram.is_some());
         let histogram = histogram.histogram.unwrap();
         assert!(!histogram.is_empty());
