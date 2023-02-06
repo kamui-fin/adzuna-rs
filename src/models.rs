@@ -224,9 +224,10 @@ where
     ser.end()
 }
 
-#[derive(Default, Serialize)]
+#[derive(Debug, Default, Serialize)]
 pub struct Parameters {
     #[serde(serialize_with = "location_serialize")]
+    #[serde(flatten)]
     pub locations: Vec<String>,
     pub category: Option<String>,
 

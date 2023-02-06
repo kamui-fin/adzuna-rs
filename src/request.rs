@@ -7,7 +7,7 @@ use serde::de::DeserializeOwned;
 const ROOT_URL: &str = "https://api.adzuna.com/v1/api";
 
 #[async_trait]
-trait AdzunaRequestBuilder {
+pub trait RequestBuilder {
     type Response: DeserializeOwned + std::fmt::Debug;
 
     fn get_request_url(&self) -> String;
@@ -16,19 +16,18 @@ trait AdzunaRequestBuilder {
 
     async fn fetch(&self) -> Result<Self::Response, StatusCode> {
         let url = format!("{}{}", ROOT_URL, self.get_request_url());
-        let auth_params: Vec<(String, &String)> = vec![
-            ("app_id".into(), &self.get_client().app_id),
-            ("app_key".into(), &self.get_client().app_key),
+        let auth_params: Vec<(String, String)> = vec![
+            ("app_id".into(), self.get_client().app_id.clone()),
+            ("app_key".into(), self.get_client().app_key.clone()),
         ];
 
         let client = reqwest::Client::new();
-        let response = client
+        let request = client
             .get(url)
             .query(&auth_params)
-            .query(&self.get_parameters())
-            .send()
-            .await;
+            .query(self.get_parameters());
 
+        let response = request.send().await;
         match &response {
             Ok(r) => {
                 if r.status() != StatusCode::OK {
@@ -83,7 +82,7 @@ macro_rules! create_endpoint {
 
 create_endpoint!(VersionRequest);
 
-impl AdzunaRequestBuilder for VersionRequest<'_> {
+impl RequestBuilder for VersionRequest<'_> {
     type Response = Version;
 
     fn get_client(&self) -> &Client {
@@ -101,7 +100,7 @@ impl AdzunaRequestBuilder for VersionRequest<'_> {
 
 create_endpoint!(CategoriesRequest);
 
-impl AdzunaRequestBuilder for CategoriesRequest<'_> {
+impl RequestBuilder for CategoriesRequest<'_> {
     type Response = Categories;
 
     fn get_client(&self) -> &Client {
@@ -127,7 +126,7 @@ impl CategoriesRequest<'_> {
 
 create_endpoint!(HistogramRequest);
 
-impl AdzunaRequestBuilder for HistogramRequest<'_> {
+impl RequestBuilder for HistogramRequest<'_> {
     type Response = SalaryHistogram;
 
     fn get_client(&self) -> &Client {
@@ -172,7 +171,7 @@ impl HistogramRequest<'_> {
 
 create_endpoint!(HistoryRequest);
 
-impl AdzunaRequestBuilder for HistoryRequest<'_> {
+impl RequestBuilder for HistoryRequest<'_> {
     type Response = HistoricalSalary;
 
     fn get_client(&self) -> &Client {
@@ -217,7 +216,7 @@ impl HistoryRequest<'_> {
 
 create_endpoint!(TopCompaniesRequest);
 
-impl AdzunaRequestBuilder for TopCompaniesRequest<'_> {
+impl RequestBuilder for TopCompaniesRequest<'_> {
     type Response = TopCompanies;
 
     fn get_client(&self) -> &Client {
@@ -262,7 +261,7 @@ impl TopCompaniesRequest<'_> {
 
 create_endpoint!(GeodataRequest);
 
-impl AdzunaRequestBuilder for GeodataRequest<'_> {
+impl RequestBuilder for GeodataRequest<'_> {
     type Response = JobGeoData;
 
     fn get_client(&self) -> &Client {
@@ -302,7 +301,7 @@ impl GeodataRequest<'_> {
 
 create_endpoint!(SearchRequest);
 
-impl AdzunaRequestBuilder for SearchRequest<'_> {
+impl RequestBuilder for SearchRequest<'_> {
     type Response = JobSearchResults;
 
     fn get_client(&self) -> &Client {

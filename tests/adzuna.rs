@@ -3,6 +3,7 @@ mod tests {
     use std::env;
 
     use adzuna_rs::client::Client;
+    use adzuna_rs::request::RequestBuilder;
 
     fn get_client() -> Client {
         Client::new(env::var("API_ID").unwrap(), env::var("API_KEY").unwrap())
