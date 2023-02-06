@@ -6,6 +6,27 @@ use serde::de::DeserializeOwned;
 
 const ROOT_URL: &str = "https://api.adzuna.com/v1/api";
 
+#[derive(Debug)]
+pub struct AdzunaError {
+    pub api_error: Option<ApiException>,
+    pub http_status: StatusCode,
+}
+
+impl AdzunaError {
+    pub fn new(api_error: Option<ApiException>, http_status: StatusCode) -> Self {
+        Self {
+            api_error,
+            http_status,
+        }
+    }
+    pub fn from_status(http_status: StatusCode) -> Self {
+        Self {
+            api_error: None,
+            http_status,
+        }
+    }
+}
+
 #[async_trait]
 pub trait RequestBuilder {
     type Response: DeserializeOwned + std::fmt::Debug;
@@ -14,7 +35,7 @@ pub trait RequestBuilder {
     fn get_client(&self) -> &Client;
     fn get_parameters(&self) -> &Parameters;
 
-    async fn fetch(&self) -> Result<Self::Response, StatusCode> {
+    async fn fetch(&self) -> Result<Self::Response, AdzunaError> {
         let url = format!("{}{}", ROOT_URL, self.get_request_url());
         let auth_params: Vec<(String, String)> = vec![
             ("app_id".into(), self.get_client().app_id.clone()),
@@ -27,35 +48,23 @@ pub trait RequestBuilder {
             .query(&auth_params)
             .query(self.get_parameters());
 
-        let response = request.send().await;
-        match &response {
-            Ok(r) => {
-                if r.status() != StatusCode::OK {
-                    println!("{r:#?}");
-                    return Err(r.status());
-                }
-            }
-            Err(e) => {
-                println!("{e:#?}");
-                if e.is_status() {
-                    return Err(e.status().unwrap());
-                } else {
-                    return Err(StatusCode::BAD_REQUEST);
-                }
-            }
+        let response = request
+            .send()
+            .await
+            .map_err(|e| AdzunaError::from_status(e.status().unwrap_or(StatusCode::BAD_REQUEST)))?;
+        let status = response.status();
+
+        if status != StatusCode::OK {
+            return Err(AdzunaError::new(
+                response.json::<ApiException>().await.ok(),
+                status,
+            ));
         }
 
-        let response = response.unwrap().json::<Self::Response>().await;
-        match response {
-            Ok(response) => {
-                println!("{response:#?}");
-                Ok(response)
-            }
-            Err(e) => {
-                println!("{e:#?}");
-                Err(StatusCode::BAD_REQUEST)
-            }
-        }
+        response
+            .json::<Self::Response>()
+            .await
+            .map_err(|_| AdzunaError::from_status(StatusCode::BAD_REQUEST))
     }
 }
 

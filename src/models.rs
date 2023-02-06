@@ -6,7 +6,7 @@ use std::{
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Exception {
+pub struct ApiException {
     /// A string representing the class of exception.
     pub exception: String,
     /// A human readable error message in English.

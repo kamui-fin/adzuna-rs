@@ -3,7 +3,11 @@ pub mod models;
 pub mod request;
 
 // TODO:
-// - verify and test all models
+// - error handling
 // - rate limiter
 // - health method
 // - ping method
+// - CI
+//
+// FIX:
+// - mandatory what parameter for search
