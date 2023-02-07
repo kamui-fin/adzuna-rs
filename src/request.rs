@@ -130,7 +130,7 @@ impl RequestBuilder for CategoriesRequest<'_> {
 }
 
 impl CategoriesRequest<'_> {
-    /// Filter with a country of interest.
+    /// Filter with a country of interest. Defaults to US.
     pub fn country(mut self, country: Country) -> Self {
         self.search_country = country.to_code();
         self
@@ -161,7 +161,7 @@ impl HistogramRequest<'_> {
         self.parameters.what = Some(what.into());
         self
     }
-    /// Filter with a country of interest.
+    /// Filter with a country of interest. Defaults to US.
     pub fn country(mut self, country: Country) -> Self {
         self.search_country = country.to_code();
         self
@@ -206,7 +206,7 @@ impl HistoryRequest<'_> {
         self.parameters.months = Some(months);
         self
     }
-    /// Filter with a country of interest.
+    /// Filter with a country of interest. Defaults to US.
     pub fn country(mut self, country: Country) -> Self {
         self.search_country = country.to_code();
         self
@@ -251,7 +251,7 @@ impl TopCompaniesRequest<'_> {
         self.parameters.what = Some(what.into());
         self
     }
-    /// Filter with a country of interest.
+    /// Filter with a country of interest. Defaults to US.
     pub fn country(mut self, country: Country) -> Self {
         self.search_country = country.to_code();
         self
@@ -331,7 +331,7 @@ impl RequestBuilder for SearchRequest<'_> {
 }
 
 impl SearchRequest<'_> {
-    /// Filter with a country of interest.
+    /// Filter with a country of interest. Defaults to US.
     pub fn country(mut self, country: Country) -> Self {
         self.search_country = country.to_code();
         self

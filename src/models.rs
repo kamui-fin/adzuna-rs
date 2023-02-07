@@ -1,4 +1,4 @@
-use serde::{ser::SerializeMap, Deserialize, Serialize, Serializer};
+use serde::{ser::SerializeMap, Deserialize, Deserializer, Serialize, Serializer};
 use std::{
     collections::HashMap,
     fmt::{Display, Formatter},
@@ -43,7 +43,7 @@ pub struct Company {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TopCompanies {
-    /// A list of Company objects, ordered by the number of advertisements they have in our database.
+    /// A list of Company objects, ordered by the number of advertisements they have in the database.
     pub leaderboard: Option<Vec<Company>>,
 }
 
@@ -114,7 +114,60 @@ pub struct JobGeoData {
     pub locations: Option<Vec<LocationJobs>>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+fn string_bool<'de, D>(deserializer: D) -> Result<bool, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let buf = String::deserialize(deserializer)?;
+    Ok(match buf.as_str() {
+        "1" => true,
+        "0" | &_ => false,
+    })
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub enum ContractType {
+    Permanent,
+    Contract,
+}
+
+fn decode_contract_type<'de, D>(deserializer: D) -> Result<Option<ContractType>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let option = Option::<String>::deserialize(deserializer)?;
+    match option {
+        Some(option) => Ok(match option.as_str() {
+            "permanent" => Some(ContractType::Permanent),
+            "contract" => Some(ContractType::Contract),
+            &_ => None,
+        }),
+        None => Ok(None),
+    }
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub enum ContractTime {
+    FullTime,
+    PartTime,
+}
+
+fn decode_contract_time<'de, D>(deserializer: D) -> Result<Option<ContractTime>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let option = Option::<String>::deserialize(deserializer)?;
+    match option {
+        Some(option) => Ok(match option.as_str() {
+            "full_time" => Some(ContractTime::FullTime),
+            "part_time" => Some(ContractTime::PartTime),
+            &_ => None,
+        }),
+        None => Ok(None),
+    }
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Deserialize)]
 pub struct Job {
     /// A string uniquely identifying this advertisement.
     pub id: String,
@@ -144,18 +197,23 @@ pub struct Job {
     /// A flag indicating if the salary of the job was predicted by Adzuna's 'Jobsworth' technology.
     /// Jobsworth predicts salaries for jobs with no advertised salary.
     /// Predictions are based on continual analysis of millions of ads. Most of the time predictions are accurate within 10%.
-    pub salary_is_predicted: String,
+    #[serde(deserialize_with = "string_bool")]
+    pub salary_is_predicted: bool,
     /// The company offering the job.
     pub company: Company,
     /// Either `permanent` or `contract` to indicate whether the job is permanent or just a short-term contract.
-    pub contract_type: Option<String>,
+    #[serde(default)]
+    #[serde(deserialize_with = "decode_contract_type")]
+    pub contract_type: Option<ContractType>,
     /// Either `full_time` or `part_time` to indicate the hours of the job.
-    pub contract_time: Option<String>,
+    #[serde(default)]
+    #[serde(deserialize_with = "decode_contract_time")]
+    pub contract_time: Option<ContractTime>,
     /// TBD
     pub adref: String,
 }
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Deserialize)]
 pub struct JobSearchResults {
     /// An array of the search results as Job objects.
     pub results: Vec<Job>,
