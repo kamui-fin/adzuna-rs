@@ -1,5 +1,5 @@
 use crate::client::Client;
-use crate::models::*;
+use crate::models;
 use async_trait::async_trait;
 use reqwest::StatusCode;
 use serde::de::DeserializeOwned;
@@ -7,13 +7,13 @@ use serde::de::DeserializeOwned;
 const ROOT_URL: &str = "https://api.adzuna.com/v1/api";
 
 #[derive(Debug)]
-pub struct AdzunaError {
-    pub api_error: Option<ApiException>,
+pub struct Error {
+    pub api_error: Option<models::ApiException>,
     pub http_status: StatusCode,
 }
 
-impl AdzunaError {
-    pub fn new(api_error: Option<ApiException>, http_status: StatusCode) -> Self {
+impl Error {
+    pub fn new(api_error: Option<models::ApiException>, http_status: StatusCode) -> Self {
         Self {
             api_error,
             http_status,
@@ -36,18 +36,19 @@ pub trait RequestBuilder {
     #[doc(hidden)]
     fn get_client(&self) -> &Client;
     #[doc(hidden)]
-    fn get_parameters(&self) -> &Parameters;
+    fn get_parameters(&self) -> &models::Parameters;
 
     /// Builds and executes request.
-    async fn fetch(&self) -> Result<Self::Response, AdzunaError> {
+    async fn fetch(&self) -> Result<Self::Response, Error> {
         let url = format!("{}{}", ROOT_URL, self.get_request_url());
         let auth_params: Vec<(String, String)> = vec![
             ("app_id".into(), self.get_client().app_id.clone()),
             ("app_key".into(), self.get_client().app_key.clone()),
         ];
 
-        let client = reqwest::Client::new();
-        let request = client
+        let request = self
+            .get_client()
+            .req_client
             .get(url)
             .query(&auth_params)
             .query(self.get_parameters());
@@ -55,19 +56,19 @@ pub trait RequestBuilder {
         let response = request
             .send()
             .await
-            .map_err(|e| AdzunaError::from_status(e.status().unwrap_or(StatusCode::BAD_REQUEST)))?;
+            .map_err(|e| Error::from_status(e.status().unwrap_or(StatusCode::BAD_REQUEST)))?;
         let status = response.status();
 
         if status != StatusCode::OK {
-            return Err(AdzunaError::new(
-                response.json::<ApiException>().await.ok(),
+            return Err(Error::new(
+                response.json::<models::ApiException>().await.ok(),
                 status,
             ));
         }
 
         response.json::<Self::Response>().await.map_err(|e| {
             println!("{e:#?}");
-            AdzunaError::from_status(StatusCode::BAD_REQUEST)
+            Error::from_status(StatusCode::BAD_REQUEST)
         })
     }
 }
@@ -76,7 +77,7 @@ macro_rules! create_endpoint {
     ($name: ident) => {
         pub struct $name<'a> {
             client: &'a Client,
-            parameters: Parameters,
+            parameters: models::Parameters,
             search_country: &'static str,
             search_page: usize,
         }
@@ -85,7 +86,7 @@ macro_rules! create_endpoint {
                 Self {
                     client,
                     parameters: Default::default(),
-                    search_country: Country::UnitedStates.to_code(),
+                    search_country: models::Country::UnitedStates.to_code(),
                     search_page: 1,
                 }
             }
@@ -96,13 +97,13 @@ macro_rules! create_endpoint {
 create_endpoint!(VersionRequest);
 
 impl RequestBuilder for VersionRequest<'_> {
-    type Response = Version;
+    type Response = models::Version;
 
     fn get_client(&self) -> &Client {
         self.client
     }
 
-    fn get_parameters(&self) -> &Parameters {
+    fn get_parameters(&self) -> &models::Parameters {
         &self.parameters
     }
 
@@ -114,13 +115,13 @@ impl RequestBuilder for VersionRequest<'_> {
 create_endpoint!(CategoriesRequest);
 
 impl RequestBuilder for CategoriesRequest<'_> {
-    type Response = Categories;
+    type Response = models::Categories;
 
     fn get_client(&self) -> &Client {
         self.client
     }
 
-    fn get_parameters(&self) -> &Parameters {
+    fn get_parameters(&self) -> &models::Parameters {
         &self.parameters
     }
 
@@ -131,7 +132,7 @@ impl RequestBuilder for CategoriesRequest<'_> {
 
 impl CategoriesRequest<'_> {
     /// Filter with a country of interest. Defaults to US.
-    pub fn country(mut self, country: Country) -> Self {
+    pub fn country(mut self, country: models::Country) -> Self {
         self.search_country = country.to_code();
         self
     }
@@ -140,13 +141,13 @@ impl CategoriesRequest<'_> {
 create_endpoint!(HistogramRequest);
 
 impl RequestBuilder for HistogramRequest<'_> {
-    type Response = SalaryHistogram;
+    type Response = models::SalaryHistogram;
 
     fn get_client(&self) -> &Client {
         self.client
     }
 
-    fn get_parameters(&self) -> &Parameters {
+    fn get_parameters(&self) -> &models::Parameters {
         &self.parameters
     }
 
@@ -162,7 +163,7 @@ impl HistogramRequest<'_> {
         self
     }
     /// Filter with a country of interest. Defaults to US.
-    pub fn country(mut self, country: Country) -> Self {
+    pub fn country(mut self, country: models::Country) -> Self {
         self.search_country = country.to_code();
         self
     }
@@ -185,13 +186,13 @@ impl HistogramRequest<'_> {
 create_endpoint!(HistoryRequest);
 
 impl RequestBuilder for HistoryRequest<'_> {
-    type Response = HistoricalSalary;
+    type Response = models::HistoricalSalary;
 
     fn get_client(&self) -> &Client {
         self.client
     }
 
-    fn get_parameters(&self) -> &Parameters {
+    fn get_parameters(&self) -> &models::Parameters {
         &self.parameters
     }
 
@@ -207,7 +208,7 @@ impl HistoryRequest<'_> {
         self
     }
     /// Filter with a country of interest. Defaults to US.
-    pub fn country(mut self, country: Country) -> Self {
+    pub fn country(mut self, country: models::Country) -> Self {
         self.search_country = country.to_code();
         self
     }
@@ -230,13 +231,13 @@ impl HistoryRequest<'_> {
 create_endpoint!(TopCompaniesRequest);
 
 impl RequestBuilder for TopCompaniesRequest<'_> {
-    type Response = TopCompanies;
+    type Response = models::TopCompanies;
 
     fn get_client(&self) -> &Client {
         self.client
     }
 
-    fn get_parameters(&self) -> &Parameters {
+    fn get_parameters(&self) -> &models::Parameters {
         &self.parameters
     }
 
@@ -252,7 +253,7 @@ impl TopCompaniesRequest<'_> {
         self
     }
     /// Filter with a country of interest. Defaults to US.
-    pub fn country(mut self, country: Country) -> Self {
+    pub fn country(mut self, country: models::Country) -> Self {
         self.search_country = country.to_code();
         self
     }
@@ -275,13 +276,13 @@ impl TopCompaniesRequest<'_> {
 create_endpoint!(GeodataRequest);
 
 impl RequestBuilder for GeodataRequest<'_> {
-    type Response = JobGeoData;
+    type Response = models::JobGeoData;
 
     fn get_client(&self) -> &Client {
         self.client
     }
 
-    fn get_parameters(&self) -> &Parameters {
+    fn get_parameters(&self) -> &models::Parameters {
         &self.parameters
     }
 
@@ -292,7 +293,7 @@ impl RequestBuilder for GeodataRequest<'_> {
 
 impl GeodataRequest<'_> {
     /// Filter with a country of interest.
-    pub fn country(mut self, country: Country) -> Self {
+    pub fn country(mut self, country: models::Country) -> Self {
         self.search_country = country.to_code();
         self
     }
@@ -315,13 +316,13 @@ impl GeodataRequest<'_> {
 create_endpoint!(SearchRequest);
 
 impl RequestBuilder for SearchRequest<'_> {
-    type Response = JobSearchResults;
+    type Response = models::JobSearchResults;
 
     fn get_client(&self) -> &Client {
         self.client
     }
 
-    fn get_parameters(&self) -> &Parameters {
+    fn get_parameters(&self) -> &models::Parameters {
         &self.parameters
     }
 
@@ -332,7 +333,7 @@ impl RequestBuilder for SearchRequest<'_> {
 
 impl SearchRequest<'_> {
     /// Filter with a country of interest. Defaults to US.
-    pub fn country(mut self, country: Country) -> Self {
+    pub fn country(mut self, country: models::Country) -> Self {
         self.search_country = country.to_code();
         self
     }
@@ -472,13 +473,13 @@ impl SearchRequest<'_> {
     }
 
     /// Specify the ordering of search results.
-    pub fn sort_by(mut self, sort_by: SortBy) -> Self {
+    pub fn sort_by(mut self, sort_by: models::SortBy) -> Self {
         self.parameters.sort_by = Some(sort_by.to_string());
         self
     }
 
     /// Specify a direction to order the search results.
-    pub fn sort_dir(mut self, sort_dir: SortDirection) -> Self {
+    pub fn sort_dir(mut self, sort_dir: models::SortDirection) -> Self {
         self.parameters.sort_dir = Some(sort_dir.to_string());
         self
     }

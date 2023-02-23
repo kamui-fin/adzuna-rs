@@ -4,12 +4,18 @@ use crate::request::*;
 pub struct Client {
     pub app_id: String,
     pub app_key: String,
+    pub req_client: reqwest::Client,
 }
 
 impl Client {
     /// Create a new client with API credentials.
     pub fn new(app_id: String, app_key: String) -> Self {
-        Self { app_id, app_key }
+        let req_client = reqwest::Client::new();
+        Self {
+            app_id,
+            app_key,
+            req_client,
+        }
     }
 
     /// Return the current version of this API

@@ -5,7 +5,6 @@ use std::{
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ApiException {
     /// A string representing the class of exception.
     pub exception: String,
@@ -119,10 +118,7 @@ where
     D: Deserializer<'de>,
 {
     let buf = String::deserialize(deserializer)?;
-    Ok(match buf.as_str() {
-        "1" => true,
-        "0" | &_ => false,
-    })
+    Ok(buf == "1")
 }
 
 #[derive(PartialEq, Clone, Debug)]
